@@ -1,0 +1,44 @@
+[build-system]
+requires = ["hatchling==1.27.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "tripwire-agent"
+version = "0.1.0"
+description = "Deterministic behavioural detection for AI-agent tool-call traces"
+requires-python = ">=3.11,<3.14"
+license = { text = "Apache-2.0" }
+dependencies = [
+  "PyYAML==6.0.2",
+]
+
+[project.scripts]
+tripwire = "tripwire.cli:main"
+
+[dependency-groups]
+dev = [
+  "build==1.2.2.post1",
+  "mypy==1.15.0",
+  "pytest==8.3.5",
+  "ruff==0.9.10",
+  "types-PyYAML==6.0.12.20250516",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/tripwire"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+packages = ["tripwire"]

@@ -1,0 +1,39 @@
+schema_version: 1
+suite: banking
+benchmark_version: v1.2.2
+
+tools:
+  get_iban:
+    role: sensitive_read
+    result_trust: internal
+  send_money:
+    role: external_write
+    result_trust: internal
+  schedule_transaction:
+    role: external_write
+    result_trust: internal
+  update_scheduled_transaction:
+    role: external_write
+    result_trust: internal
+  get_balance:
+    role: sensitive_read
+    result_trust: internal
+  get_most_recent_transactions:
+    role: sensitive_read
+    result_trust: internal
+  get_scheduled_transactions:
+    role: sensitive_read
+    result_trust: internal
+  read_file:
+    role: external_input
+    result_trust: external
+  get_user_info:
+    role: sensitive_read
+    result_trust: internal
+  update_password:
+    role: state_change
+    result_trust: internal
+  update_user_info:
+    role: state_change
+    result_trust: internal
+

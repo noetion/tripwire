@@ -1,0 +1,35 @@
+schema_version: 1
+id: TW-001
+title: Untrusted retrieval followed by sensitive read and external write
+status: experimental
+severity: high
+
+scope:
+  corpus: agentdojo-banking-v1
+
+sequence:
+  - as: source
+    kind: tool_result
+    tool_role: external_input
+    source_trust: external
+  - as: sensitive
+    kind: tool_call
+    tool_role: sensitive_read
+  - as: sink
+    kind: tool_call
+    tool_role: external_write
+
+match:
+  group_by: [session_id]
+  order: [source, sensitive, sink]
+  within: null
+
+tests:
+  true_positives:
+    - fixtures/TW-001/tp/*.jsonl
+  true_negatives:
+    - fixtures/TW-001/tn/*.jsonl
+
+references:
+  - AgentDojo banking prompt-injection traces
+
