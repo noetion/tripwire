@@ -369,6 +369,19 @@ def test_committed_result_reproduces() -> None:
     assert summary.startswith("TW-001 verified: holdout TP=6 FP=1 TN=36 FN=11")
 
 
+def test_public_report_preserves_evaluation_discipline() -> None:
+    result = evaluate_corpus(
+        load_rule(ROOT / "rules" / "TW-001.yaml"),
+        ROOT / "corpora" / "agentdojo-banking-v1",
+    )
+    readme = render_readme(result)
+    assert "canonical holdout is spent" in readme
+    assert "intervals overlap substantially" in readme
+    assert "reports recall only" in readme
+    assert "## Related work" in readme
+    assert any("holdout is spent" in limitation for limitation in result["limitations"])
+
+
 def test_readme_is_generated_from_canonical_result() -> None:
     result = json.loads(
         (ROOT / "results" / "agentdojo-banking-v1.json").read_text(encoding="utf-8")

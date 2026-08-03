@@ -65,6 +65,10 @@ def evaluate_corpus(rule: Rule, corpus: Path, *, split: str = "all") -> dict[str
                 "whole user tasks or injection families."
             ),
             (
+                "TW-001 is frozen and its inspected canonical holdout is spent for future "
+                "rule revision."
+            ),
+            (
                 "TW-001 improved development specificity over the naive sequence by one session, "
                 "but both produced one false positive on holdout."
             ),

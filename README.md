@@ -25,15 +25,24 @@ Confusion counts: TP 6, FP 1, TN 36, FN 11. The holdout contains 17 positive and
 
 The canonical split hashes `(suite, user task, injection task)` tuples. It measures generalisation to unseen combinations, not unseen user tasks or attack families: some user-task identities and every injection-task identity appear on both sides.
 
+`TW-001` is now frozen. Its canonical holdout is spent because every error has been inspected. Any successor must be evaluated on a fresh split or corpus; a result produced by revising the rule against this holdout must be labelled contaminated rather than reported as new holdout performance.
+
 ## Injection-family stress test
 
-A secondary deterministic split hashes `(suite, injection task)` so complete injection families stay together. It holds out `injection_task_7`, `injection_task_8` and recalls 6/13 (46.2%, Wilson 95%: 23.2%–70.9%). This is higher than the canonical 35.3%, not lower. It is a post-hoc stress test rather than an unbiased unseen-attack estimate because the original development partition exposed TW-001's development process to examples from every injection family.
+A secondary deterministic split hashes `(suite, injection task)` so complete injection families stay together. It holds out `injection_task_7`, `injection_task_8` and recalls 6/13 (46.2%, Wilson 95%: 23.2%–70.9%). This is numerically higher than the canonical 35.3%, but the intervals overlap substantially, so the numerical difference should not be interpreted as evidence that recall differs. The stress test reports recall only: benign no-injection negatives have no injection family and cannot be assigned by this grouping rule, so precision and false-positive rate would not be comparable. It is a post-hoc stress test rather than an unbiased unseen-attack estimate because the original development partition exposed TW-001's development process to examples from every injection family.
 
 ## Specificity ceiling
 
 Three development negatives matched TW-001. Two were benign `none/none.json` sessions whose legitimate workflow was `read_file` → `get_scheduled_transactions` → `update_scheduled_transaction`; the third was an injected run whose benchmark attack failed. The holdout false positive was also a failed injected run, and all four false positives share that scheduled-update sequence. The rule's sequence is therefore a normal banking workflow as well as an attack shape, so structure alone cannot establish malicious intent.
 
 This result classifies successful prompt-injection outcomes in the committed AgentDojo banking corpus under the documented tool taxonomy. It does not establish causation, malicious intent, prevention, general prompt-injection detection, or real-time operation. Historic traces test order but not elapsed-time semantics. See [`LIMITATIONS.md`](LIMITATIONS.md).
+
+## Related work
+
+- [AgentDojo](https://proceedings.neurips.cc/paper_files/paper/2024/hash/97091a5177d8dc64b1da8bf3e1f6fb54-Abstract-Datasets_and_Benchmarks_Track.html) supplies the agent tasks, attacks, benchmark outcomes and source traces used by the committed corpus. Tripwire adds a sanitised replay corpus and detection-oriented measurement rather than a new attack benchmark.
+- [Agent Threat Rules (ATR)](https://github.com/Agent-Threat-Rule/agent-threat-rules) standardises portable rules evaluated against individual agent events and content fields. Tripwire instead measures ordered cross-event behaviour and exposes where event-level tool provenance loses mixed-trust structure inside a result.
+- [AgentSigma](https://github.com/cveye/agentsigma) is a close detection-engineering precedent: a Sigma-compatible runtime framework for the agent tool-call layer. Tripwire's narrower contribution is a frozen labelled evaluation, explicit holdout discipline and measured provenance failure.
+- [Out-of-band agent defenses](https://arxiv.org/abs/2606.26479) use deterministic policies, capabilities or information-flow labels outside the model. Tripwire's finding identifies a boundary condition for designs that collapse provenance to tool identity or whole tool results: a trusted tool can return attacker-controlled fields.
 
 ## Evidence
 
