@@ -70,6 +70,7 @@ def write_result(result: dict[str, Any], output: Path) -> None:
 
 def verify_repository(root: Path) -> str:
     from tripwire.core.rules import load_rule
+    from tripwire.reporting import render_readme
 
     corpus = root / "corpora" / "agentdojo-banking-v1"
     rule = load_rule(root / "rules" / "TW-001.yaml")
@@ -83,6 +84,9 @@ def verify_repository(root: Path) -> str:
         raise VerificationError(f"cannot load committed result: {exc}") from exc
     if canonical_json(generated) != canonical_json(committed):
         raise VerificationError("committed TW-001 result does not reproduce")
+    readme_path = root / "README.md"
+    if readme_path.read_text(encoding="utf-8") != render_readme(generated):
+        raise VerificationError("README result summary was not generated from the canonical result")
     holdout = cast(dict[str, Any], generated["holdout"])
     counts = cast(dict[str, Any], holdout["counts"])
     return (

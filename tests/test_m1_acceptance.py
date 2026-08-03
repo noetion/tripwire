@@ -13,6 +13,7 @@ from tripwire.core.rules import Rule, RuleTests, SequenceStep, load_rule
 from tripwire.core.sanitise import TraceSanitiser
 from tripwire.corpus import load_split_runs, split_for_group, split_group_key
 from tripwire.evaluation import verify_repository
+from tripwire.reporting import render_readme
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -209,3 +210,10 @@ def test_sensitive_values_removed_from_committed_corpus() -> None:
 def test_committed_result_reproduces() -> None:
     summary = verify_repository(ROOT)
     assert summary.startswith("TW-001 verified: holdout TP=6 FP=1 TN=36 FN=11")
+
+
+def test_readme_is_generated_from_canonical_result() -> None:
+    result = json.loads(
+        (ROOT / "results" / "agentdojo-banking-v1.json").read_text(encoding="utf-8")
+    )
+    assert (ROOT / "README.md").read_text(encoding="utf-8") == render_readme(result)

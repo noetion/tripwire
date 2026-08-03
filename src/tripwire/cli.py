@@ -39,6 +39,11 @@ def _parser() -> argparse.ArgumentParser:
     evaluate_parser.add_argument("--output", type=Path, required=True)
 
     subcommands.add_parser("verify")
+    report = subcommands.add_parser("report")
+    report_subcommands = report.add_subparsers(dest="report_command", required=True)
+    readme_parser = report_subcommands.add_parser("readme")
+    readme_parser.add_argument("--result", type=Path, required=True)
+    readme_parser.add_argument("--output", type=Path, default=Path("README.md"))
     return parser
 
 
@@ -97,6 +102,15 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 0
     if args.command == "verify":
         print(verify_repository(Path.cwd()))
+        return 0
+    if args.command == "report" and args.report_command == "readme":
+        from tripwire.reporting import render_readme
+
+        raw = json.loads(args.result.read_text(encoding="utf-8"))
+        if not isinstance(raw, dict):
+            raise ValueError("result root must be an object")
+        args.output.write_text(render_readme(raw), encoding="utf-8")
+        print(f"Generated {args.output} from {args.result}")
         return 0
     return 2
 
