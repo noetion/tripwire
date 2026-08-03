@@ -58,6 +58,14 @@ def evaluate_corpus(rule: Rule, corpus: Path, *, split: str = "all") -> dict[str
                 "TW-001 improved development specificity over the naive sequence by one session, "
                 "but both produced one false positive on holdout."
             ),
+            (
+                "Eight of eleven holdout false negatives carry injected content inside mixed-"
+                "provenance transaction results classified as internal at tool-result granularity."
+            ),
+            (
+                "The single holdout false positive contains the structural sequence but did not "
+                "satisfy the benchmark injection-task goal."
+            ),
         ],
     }
     if split in {"development", "all"}:

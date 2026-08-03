@@ -650,7 +650,9 @@
     "Ordered correlation does not establish causation or malicious intent.",
     "Historic AgentDojo traces have no per-event timestamps, so elapsed-time semantics are not measured.",
     "The result is conditional on the committed AgentDojo banking tool taxonomy.",
-    "TW-001 improved development specificity over the naive sequence by one session, but both produced one false positive on holdout."
+    "TW-001 improved development specificity over the naive sequence by one session, but both produced one false positive on holdout.",
+    "Eight of eleven holdout false negatives carry injected content inside mixed-provenance transaction results classified as internal at tool-result granularity.",
+    "The single holdout false positive contains the structural sequence but did not satisfy the benchmark injection-task goal."
   ],
   "result_id": "agentdojo-banking-v1",
   "rule_id": "TW-001",

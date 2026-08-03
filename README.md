@@ -30,5 +30,6 @@ This result classifies successful prompt-injection outcomes in the committed Age
 - Corpus manifest: [`corpora/agentdojo-banking-v1/manifest.json`](corpora/agentdojo-banking-v1/manifest.json)
 - Ground truth: [`docs/ground-truth.md`](docs/ground-truth.md)
 - Data handling: [`docs/data-handling.md`](docs/data-handling.md)
+- Holdout error audit: [`docs/evidence-audit.md`](docs/evidence-audit.md)
 
 Licensed under Apache-2.0. The derived corpus retains its upstream AgentDojo attribution and MIT licence notice.
