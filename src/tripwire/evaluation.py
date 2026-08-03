@@ -12,7 +12,13 @@ from tripwire.core.engine import Match, evaluate
 from tripwire.core.events import AgentEvent, JsonValue, NormalisedRun
 from tripwire.core.metrics import SessionMetrics, session_metrics
 from tripwire.core.rules import Rule
-from tripwire.corpus import deserialise_event, load_split_runs, validate_corpus
+from tripwire.corpus import (
+    deserialise_event,
+    injection_family_group_key,
+    load_split_runs,
+    split_for_group,
+    validate_corpus,
+)
 
 
 class VerificationError(RuntimeError):
@@ -55,6 +61,10 @@ def evaluate_corpus(rule: Rule, corpus: Path, *, split: str = "all") -> dict[str
             ),
             "The result is conditional on the committed AgentDojo banking tool taxonomy.",
             (
+                "The canonical split holds out user-task/injection-task combinations, not "
+                "whole user tasks or injection families."
+            ),
+            (
                 "TW-001 improved development specificity over the naive sequence by one session, "
                 "but both produced one false positive on holdout."
             ),
@@ -72,6 +82,12 @@ def evaluate_corpus(rule: Rule, corpus: Path, *, split: str = "all") -> dict[str
         result["development"] = _evaluate_split(rule, load_split_runs(corpus, "development"))
     if split in {"holdout", "all"}:
         result["holdout"] = _evaluate_split(rule, load_split_runs(corpus, "holdout"))
+    if split == "all":
+        all_runs = [
+            *load_split_runs(corpus, "development"),
+            *load_split_runs(corpus, "holdout"),
+        ]
+        result["injection_family_holdout"] = _evaluate_injection_family_holdout(rule, all_runs)
     return result
 
 
@@ -135,6 +151,45 @@ def _evaluate_split(rule: Rule, runs: list[NormalisedRun]) -> dict[str, Any]:
         "false_positive_rate": _proportion_data(metrics.false_positive_rate),
         "status": metrics.status,
         "matches": matches,
+    }
+
+
+def _evaluate_injection_family_holdout(rule: Rule, runs: list[NormalisedRun]) -> dict[str, Any]:
+    families: dict[str, tuple[str, str]] = {}
+    held_out: list[NormalisedRun] = []
+    for run in runs:
+        if run.metadata.injection_task_id is None:
+            continue
+        group_key = injection_family_group_key(run.metadata)
+        split = split_for_group(group_key)
+        families[group_key] = (split, run.metadata.injection_task_id)
+        positive = run.label.attack_present and run.label.attack_succeeded is True
+        if split == "holdout" and positive:
+            held_out.append(run)
+
+    evaluation = _evaluate_split(rule, held_out)
+    counts = cast(dict[str, Any], evaluation["counts"])
+    family_names = {
+        split: sorted(family for split_name, family in families.values() if split_name == split)
+        for split in ("development", "holdout")
+    }
+    return {
+        "group_key": ["suite_name", "injection_task_id"],
+        "algorithm": "sha256(canonical JSON array) mod 10; 0-6 development, 7-9 holdout",
+        "development_families": family_names["development"],
+        "holdout_families": family_names["holdout"],
+        "counts": {
+            "true_positives": counts["true_positives"],
+            "false_negatives": counts["false_negatives"],
+            "positive": counts["positive"],
+        },
+        "recall": evaluation["recall"],
+        "status": "post_hoc_stress_test",
+        "caveat": (
+            "TW-001 was frozen before this analysis, but its original development partition "
+            "contained examples from every injection family; this is not an unbiased estimate "
+            "of generalisation to unseen attacks."
+        ),
     }
 
 

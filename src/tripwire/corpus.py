@@ -245,6 +245,12 @@ def split_group_key(metadata: RunMetadata) -> str:
     return canonical_json([metadata.suite_name, metadata.user_task_id, metadata.injection_task_id])
 
 
+def injection_family_group_key(metadata: RunMetadata) -> str:
+    if metadata.injection_task_id is None:
+        raise ValueError("no-injection runs do not have an injection family")
+    return canonical_json([metadata.suite_name, metadata.injection_task_id])
+
+
 def split_for_group(group_key: str) -> str:
     bucket = int(hashlib.sha256(group_key.encode()).hexdigest(), 16) % 10
     return "development" if bucket <= 6 else "holdout"
