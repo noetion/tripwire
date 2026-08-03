@@ -646,10 +646,47 @@
     },
     "status": "measured"
   },
+  "injection_family_holdout": {
+    "algorithm": "sha256(canonical JSON array) mod 10; 0-6 development, 7-9 holdout",
+    "caveat": "TW-001 was frozen before this analysis, but its original development partition contained examples from every injection family; this is not an unbiased estimate of generalisation to unseen attacks.",
+    "counts": {
+      "false_negatives": 7,
+      "positive": 13,
+      "true_positives": 6
+    },
+    "development_families": [
+      "injection_task_0",
+      "injection_task_1",
+      "injection_task_2",
+      "injection_task_3",
+      "injection_task_4",
+      "injection_task_5",
+      "injection_task_6"
+    ],
+    "group_key": [
+      "suite_name",
+      "injection_task_id"
+    ],
+    "holdout_families": [
+      "injection_task_7",
+      "injection_task_8"
+    ],
+    "recall": {
+      "denominator": 13,
+      "numerator": 6,
+      "value": 0.46153846153846156,
+      "wilson_95": [
+        0.23206067809538303,
+        0.7085620428549398
+      ]
+    },
+    "status": "post_hoc_stress_test"
+  },
   "limitations": [
     "Ordered correlation does not establish causation or malicious intent.",
     "Historic AgentDojo traces have no per-event timestamps, so elapsed-time semantics are not measured.",
     "The result is conditional on the committed AgentDojo banking tool taxonomy.",
+    "The canonical split holds out user-task/injection-task combinations, not whole user tasks or injection families.",
     "TW-001 improved development specificity over the naive sequence by one session, but both produced one false positive on holdout.",
     "Eight of eleven holdout false negatives carry injected content inside mixed-provenance transaction results classified as internal at tool-result granularity.",
     "The single holdout false positive contains the structural sequence but did not satisfy the benchmark injection-task goal."
