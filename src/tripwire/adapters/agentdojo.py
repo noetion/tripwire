@@ -74,8 +74,11 @@ def load_taxonomy(path: Path) -> ToolTaxonomy:
         if role not in valid_roles or trust not in valid_trust:
             raise AgentDojoParseError(path, f"invalid taxonomy entry for {name}")
         tools[name] = ToolSemantics(cast(ToolRole, role), cast(SourceTrust, trust))
+    schema_version = _required_int(raw, "schema_version", path)
+    if schema_version != 1:
+        raise AgentDojoParseError(path, f"unsupported schema_version {schema_version}")
     return ToolTaxonomy(
-        schema_version=_required_int(raw, "schema_version", path),
+        schema_version=schema_version,
         suite=_required_str(raw, "suite", path),
         benchmark_version=_required_str(raw, "benchmark_version", path),
         tools=tools,

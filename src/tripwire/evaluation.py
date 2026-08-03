@@ -33,7 +33,9 @@ def run_rule_tests(rule: Rule, *, root: Path) -> tuple[int, int]:
     return len(positive_files), len(negative_files)
 
 
-def evaluate_corpus(rule: Rule, corpus: Path) -> dict[str, Any]:
+def evaluate_corpus(rule: Rule, corpus: Path, *, split: str = "all") -> dict[str, Any]:
+    if split not in {"development", "holdout", "all"}:
+        raise ValueError(f"unsupported split: {split}")
     manifest = validate_corpus(corpus)
     result: dict[str, Any] = {
         "schema_version": 1,
@@ -44,8 +46,6 @@ def evaluate_corpus(rule: Rule, corpus: Path) -> dict[str, Any]:
         "corpus_sha256": manifest["corpus_sha256"],
         "split_sha256": manifest["split_sha256"],
         "evaluated_at": manifest["built_at"],
-        "development": _evaluate_split(rule, load_split_runs(corpus, "development")),
-        "holdout": _evaluate_split(rule, load_split_runs(corpus, "holdout")),
         "excluded_unknown": cast(dict[str, JsonValue], manifest["inventory"])["unknown"],
         "limitations": [
             "Ordered correlation does not establish causation or malicious intent.",
@@ -60,6 +60,10 @@ def evaluate_corpus(rule: Rule, corpus: Path) -> dict[str, Any]:
             ),
         ],
     }
+    if split in {"development", "all"}:
+        result["development"] = _evaluate_split(rule, load_split_runs(corpus, "development"))
+    if split in {"holdout", "all"}:
+        result["holdout"] = _evaluate_split(rule, load_split_runs(corpus, "holdout"))
     return result
 
 

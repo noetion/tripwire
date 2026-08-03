@@ -6,7 +6,7 @@ The first corpus freezes official AgentDojo `v0.1.35` traces for the `gpt-4o-202
 
 Some historic committed traces omit benchmark and package version fields. The manifest pins the upstream tag, source revision and intended benchmark taxonomy; missing per-run metadata remains null rather than being invented.
 
-The canonical result evaluates both development and holdout partitions even when the CLI accepts `--split holdout`. This prevents the option from changing the committed evidence schema; public claims remain scoped to holdout.
+The canonical verifier evaluates both development and holdout partitions. The evaluation CLI's `--split` option limits a standalone output to the selected partition; public claims remain scoped to holdout.
 
 ## 2026-08-03: Naive-sequence stop-condition check
 

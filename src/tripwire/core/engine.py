@@ -26,17 +26,8 @@ def evaluate(rule: Rule, events: Sequence[AgentEvent]) -> tuple[Match, ...]:
     session_id = events[0].session_id
     if any(event.session_id != session_id for event in events):
         raise ValueError("events from multiple sessions cannot be evaluated together")
-    positions: list[int] = []
-    cursor = 0
-    for step in rule.sequence:
-        position = _find_next(step, events, cursor)
-        if position is None:
-            return ()
-        positions.append(position)
-        cursor = position + 1
-    if rule.within_seconds is not None and not _within_window(
-        events, positions, rule.within_seconds
-    ):
+    positions = _find_sequence(rule, events)
+    if positions is None:
         return ()
     return (
         Match(
@@ -51,7 +42,29 @@ def evaluate(rule: Rule, events: Sequence[AgentEvent]) -> tuple[Match, ...]:
     )
 
 
-def _find_next(step: SequenceStep, events: Sequence[AgentEvent], start: int) -> int | None:
+def _find_sequence(rule: Rule, events: Sequence[AgentEvent]) -> tuple[int, ...] | None:
+    def search(step_index: int, start: int, positions: tuple[int, ...]) -> tuple[int, ...] | None:
+        if step_index == len(rule.sequence):
+            return positions
+        step = rule.sequence[step_index]
+        for position in _matching_positions(step, events, start):
+            candidate = (*positions, position)
+            if rule.within_seconds is not None and not _window_candidate(
+                events, candidate, rule.within_seconds
+            ):
+                continue
+            found = search(step_index + 1, position + 1, candidate)
+            if found is not None:
+                return found
+        return None
+
+    return search(0, 0, ())
+
+
+def _matching_positions(
+    step: SequenceStep, events: Sequence[AgentEvent], start: int
+) -> tuple[int, ...]:
+    matches: list[int] = []
     for position in range(start, len(events)):
         event = events[position]
         if event.kind != step.kind:
@@ -60,15 +73,18 @@ def _find_next(step: SequenceStep, events: Sequence[AgentEvent], start: int) -> 
             continue
         if step.source_trust is not None and event.source_trust != step.source_trust:
             continue
-        return position
-    return None
+        matches.append(position)
+    return tuple(matches)
 
 
-def _within_window(events: Sequence[AgentEvent], positions: list[int], seconds: int) -> bool:
+def _window_candidate(
+    events: Sequence[AgentEvent], positions: tuple[int, ...], seconds: int
+) -> bool:
     timestamps: list[datetime] = []
     for position in positions:
         timestamp = events[position].observed_at
         if timestamp is None:
             return False
         timestamps.append(timestamp)
-    return (timestamps[-1] - timestamps[0]).total_seconds() <= seconds
+    elapsed = (timestamps[-1] - timestamps[0]).total_seconds()
+    return 0 <= elapsed <= seconds

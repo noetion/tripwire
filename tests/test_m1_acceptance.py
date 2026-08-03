@@ -1,18 +1,22 @@
 from __future__ import annotations
 
 import ast
+import hashlib
 import json
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
+import pytest
+
+from tripwire.adapters.agentdojo import AgentDojoParseError, load_taxonomy
 from tripwire.core.engine import evaluate
 from tripwire.core.events import AgentEvent, NormalisedRun, RunLabel, RunMetadata
 from tripwire.core.metrics import session_metrics
-from tripwire.core.rules import Rule, RuleTests, SequenceStep, load_rule
+from tripwire.core.rules import Rule, RuleError, RuleTests, SequenceStep, load_rule
 from tripwire.core.sanitise import TraceSanitiser
-from tripwire.corpus import load_split_runs, split_for_group, split_group_key
-from tripwire.evaluation import verify_repository
+from tripwire.corpus import load_split_runs, split_for_group, split_group_key, validate_corpus
+from tripwire.evaluation import evaluate_corpus, verify_repository
 from tripwire.reporting import render_readme
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -133,6 +137,24 @@ def test_window_when_timestamps_exist() -> None:
     )
 
 
+def test_window_retries_after_an_earlier_candidate_expires() -> None:
+    start = datetime(2026, 8, 3, tzinfo=UTC)
+    source = tw001_events(timestamps=(start, start, start))[0]
+    later_source = replace(source, seq=1, observed_at=start + timedelta(seconds=900))
+    sensitive = replace(tw001_events()[1], seq=2, observed_at=start + timedelta(seconds=950))
+    sink = replace(tw001_events()[2], seq=3, observed_at=start + timedelta(seconds=1000))
+    match = evaluate(window_rule(300), (source, later_source, sensitive, sink))[0]
+    assert match.matched_event_ordinals == (1, 2, 3)
+
+
+def test_window_rejects_negative_elapsed_time() -> None:
+    start = datetime(2026, 8, 3, tzinfo=UTC)
+    events = tw001_events(
+        timestamps=(start, start - timedelta(seconds=2), start - timedelta(seconds=1))
+    )
+    assert not evaluate(window_rule(300), events)
+
+
 def test_missing_timestamps_are_handled() -> None:
     assert evaluate(window_rule(None), tw001_events())
     assert not evaluate(window_rule(300), tw001_events())
@@ -205,6 +227,48 @@ def test_sensitive_values_removed_from_committed_corpus() -> None:
     )
     for raw in ("Emma Johnson", "US133000000121212121212", "Spotify Premium"):
         assert raw not in corpus_text
+
+
+def test_unsupported_schema_versions_fail_closed(tmp_path: Path) -> None:
+    rule_text = (ROOT / "rules" / "TW-001.yaml").read_text(encoding="utf-8")
+    rule_path = tmp_path / "rule.yaml"
+    rule_path.write_text(
+        rule_text.replace("schema_version: 1", "schema_version: 2", 1), encoding="utf-8"
+    )
+    with pytest.raises(RuleError, match="unsupported schema_version"):
+        load_rule(rule_path)
+
+    taxonomy_text = (ROOT / "config" / "agentdojo-banking-tools.yaml").read_text(encoding="utf-8")
+    taxonomy_path = tmp_path / "taxonomy.yaml"
+    taxonomy_path.write_text(
+        taxonomy_text.replace("schema_version: 1", "schema_version: 2", 1), encoding="utf-8"
+    )
+    with pytest.raises(AgentDojoParseError, match="unsupported schema_version"):
+        load_taxonomy(taxonomy_path)
+
+
+def test_corpus_manifest_cannot_escape_its_root(tmp_path: Path) -> None:
+    split_bytes = b"{}\n"
+    (tmp_path / "split.json").write_bytes(split_bytes)
+    entries = [{"file": "../outside.json", "sha256": "0" * 64}]
+    manifest = {
+        "entries": entries,
+        "corpus_sha256": hashlib.sha256(json.dumps(entries).encode()).hexdigest(),
+        "split_sha256": hashlib.sha256(split_bytes).hexdigest(),
+    }
+    (tmp_path / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+    with pytest.raises(ValueError, match="escapes corpus root"):
+        validate_corpus(tmp_path)
+
+
+def test_evaluate_split_option_limits_standalone_result() -> None:
+    result = evaluate_corpus(
+        load_rule(ROOT / "rules" / "TW-001.yaml"),
+        ROOT / "corpora" / "agentdojo-banking-v1",
+        split="holdout",
+    )
+    assert "holdout" in result
+    assert "development" not in result
 
 
 def test_committed_result_reproduces() -> None:

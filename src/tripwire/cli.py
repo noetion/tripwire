@@ -96,7 +96,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.command == "evaluate":
         from tripwire.core.rules import load_rule
 
-        evaluation_result = evaluate_corpus(load_rule(args.rule), args.corpus)
+        evaluation_result = evaluate_corpus(load_rule(args.rule), args.corpus, split=args.split)
         write_result(evaluation_result, args.output)
         print(f"Wrote reproducible result to {args.output}")
         return 0

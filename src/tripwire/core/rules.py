@@ -78,8 +78,11 @@ def load_rule(path: Path) -> Rule:
     if not tp or not tn:
         raise RuleError(f"{path}: rule must own positive and negative fixtures")
     scope = _object(raw, "scope", path)
+    schema_version = _integer(raw, "schema_version", path)
+    if schema_version != 1:
+        raise RuleError(f"{path}: unsupported schema_version {schema_version}")
     return Rule(
-        schema_version=_integer(raw, "schema_version", path),
+        schema_version=schema_version,
         rule_id=_string(raw, "id", path),
         title=_string(raw, "title", path),
         status=_string(raw, "status", path),

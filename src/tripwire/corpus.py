@@ -202,12 +202,17 @@ def validate_corpus(corpus: Path) -> dict[str, Any]:
     if not isinstance(manifest, dict) or not isinstance(manifest.get("entries"), list):
         raise ValueError(f"{manifest_path}: malformed manifest")
     entries = cast(list[dict[str, Any]], manifest["entries"])
+    corpus_root = corpus.resolve()
     for entry in entries:
         relative = entry.get("file")
         expected = entry.get("sha256")
         if not isinstance(relative, str) or not isinstance(expected, str):
             raise ValueError(f"{manifest_path}: malformed entry")
-        actual = hashlib.sha256((corpus / relative).read_bytes()).hexdigest()
+        relative_path = Path(relative)
+        candidate = (corpus / relative_path).resolve()
+        if relative_path.is_absolute() or not candidate.is_relative_to(corpus_root):
+            raise ValueError(f"corpus entry escapes corpus root: {relative}")
+        actual = hashlib.sha256(candidate.read_bytes()).hexdigest()
         if actual != expected:
             raise ValueError(f"corpus hash mismatch: {relative}")
     actual_corpus = hashlib.sha256(canonical_json(entries).encode()).hexdigest()
