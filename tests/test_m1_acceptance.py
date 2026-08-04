@@ -379,6 +379,11 @@ def test_public_report_preserves_evaluation_discipline() -> None:
     assert "intervals overlap substantially" in readme
     assert "reports recall only" in readme
     assert "## Related work" in readme
+    assert "Cross-event agent detection is established prior art" in readme
+    assert "github.com/agentshield-ai/sigma-ai" in readme
+    assert "github.com/netzilo/aidr-sigma" in readme
+    assert "github.com/timescale/rsigma" in readme
+    assert "Tripwire's contribution here is the measurement" in readme
     assert any("holdout is spent" in limitation for limitation in result["limitations"])
 
 
