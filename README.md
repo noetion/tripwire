@@ -4,7 +4,11 @@ Tripwire evaluates deterministic sequence rules over AI-agent tool-call traces. 
 
 The main finding is a provenance failure, not a new attack signature. Eight of the eleven canonical holdout false negatives received attacker-controlled strings inside transaction records returned by banking tools classified as internal. Tool-result-level provenance is too coarse when a trusted tool returns mixed-trust records; item-level provenance is required to distinguish the injected content without distrusting the entire result.
 
+Tripwire is a research prototype and reproducibility artifact. It is not affiliated with Fortra's Tripwire products. GitHub issues may be used to report reproducibility defects; no support or release cadence is promised.
+
 ## Reproduce the committed result
+
+Prerequisites: Python 3.11–3.13 and [uv](https://docs.astral.sh/uv/getting-started/installation/).
 
 ```console
 uv sync --frozen
@@ -41,7 +45,7 @@ This result classifies successful prompt-injection outcomes in the committed Age
 
 - [AgentDojo](https://proceedings.neurips.cc/paper_files/paper/2024/hash/97091a5177d8dc64b1da8bf3e1f6fb54-Abstract-Datasets_and_Benchmarks_Track.html) supplies the agent tasks, attacks, benchmark outcomes and source traces used by the committed corpus. Tripwire adds a sanitised replay corpus and detection-oriented measurement rather than a new attack benchmark.
 - [Agent Threat Rules (ATR)](https://github.com/Agent-Threat-Rule/agent-threat-rules) standardises portable detections over agent events and content fields.
-- Cross-event agent detection is established prior art, not Tripwire's novelty. [AgentSigma](https://github.com/cveye/agentsigma) applies Sigma-compatible runtime detection at the tool-call layer; [AgentShield's sigma-ai](https://github.com/agentshield-ai/sigma-ai) documents temporal correlation for sequential agent events; [AIDR Sigma](https://github.com/netzilo/aidr-sigma) describes a persistent per-session behaviour graph for multi-step patterns; and [RSigma](https://github.com/timescale/rsigma) provides in-process stateful correlation and OTLP ingest. RSigma is also a candidate substrate for any future streaming backend and should be evaluated before Tripwire implements those capabilities itself.
+- Cross-event agent detection is established prior art, not Tripwire's novelty. [AgentSigma](https://medium.com/@dasgupta.pratip/agentsigma-v0-1-building-the-detection-framework-i-wrote-about-3f6e14c194c5) applies Sigma-compatible runtime detection at the tool-call layer; [AgentShield's sigma-ai](https://github.com/agentshield-ai/sigma-ai) documents temporal correlation for sequential agent events; [AIDR Sigma](https://github.com/netzilo/aidr-sigma) describes a persistent per-session behaviour graph for multi-step patterns; and [RSigma](https://github.com/timescale/rsigma) provides in-process stateful correlation and OTLP ingest. RSigma is also a candidate substrate for any future streaming backend and should be evaluated before Tripwire implements those capabilities itself.
 - Tripwire's contribution here is the measurement: a sanitised labelled AgentDojo corpus, reproducible metrics, a frozen holdout and the provenance-granularity finding that resulted from error analysis.
 - [Out-of-band agent defenses](https://arxiv.org/abs/2606.26479) use deterministic policies, capabilities or information-flow labels outside the model. Tripwire's finding identifies a boundary condition for designs that collapse provenance to tool identity or whole tool results: a trusted tool can return attacker-controlled fields.
 

@@ -380,10 +380,13 @@ def test_public_report_preserves_evaluation_discipline() -> None:
     assert "reports recall only" in readme
     assert "## Related work" in readme
     assert "Cross-event agent detection is established prior art" in readme
+    assert "medium.com/@dasgupta.pratip/agentsigma-v0-1" in readme
+    assert "github.com/cveye/agentsigma" not in readme
     assert "github.com/agentshield-ai/sigma-ai" in readme
     assert "github.com/netzilo/aidr-sigma" in readme
     assert "github.com/timescale/rsigma" in readme
     assert "Tripwire's contribution here is the measurement" in readme
+    assert "It is not affiliated with Fortra's Tripwire products" in readme
     assert any("holdout is spent" in limitation for limitation in result["limitations"])
 
 
