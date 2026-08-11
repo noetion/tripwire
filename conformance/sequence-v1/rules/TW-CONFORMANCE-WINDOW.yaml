@@ -1,0 +1,34 @@
+schema_version: 1
+id: TW-CONFORMANCE-WINDOW
+title: Test-only bounded sequence semantics
+status: test
+severity: informational
+
+scope:
+  corpus: sequence-v1
+
+sequence:
+  - as: source
+    kind: tool_result
+    tool_role: external_input
+    source_trust: external
+  - as: sensitive
+    kind: tool_call
+    tool_role: sensitive_read
+  - as: sink
+    kind: tool_call
+    tool_role: external_write
+
+match:
+  group_by: [session_id]
+  order: [source, sensitive, sink]
+  within: 300
+
+tests:
+  true_positives:
+    - conformance/sequence-v1/fixtures/window/tp/*.jsonl
+  true_negatives:
+    - conformance/sequence-v1/fixtures/window/tn/*.jsonl
+
+references:
+  - Provider-neutral timestamp-window conformance only; not a measured detection rule

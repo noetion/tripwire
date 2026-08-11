@@ -1,0 +1,214 @@
+{
+  "engine_version": "0.1.0",
+  "event_count": 37,
+  "events_sha256": "fabc944cfff284beb1da58f79eb6f861a2ec3e7b8fca75929e832aed34eb97b4",
+  "result_id": "sequence-v1",
+  "rules": [
+    {
+      "detections": [
+        {
+          "matched_event_ordinals": [
+            0,
+            2,
+            4
+          ],
+          "matched_tool_names": [
+            "retrieve_external",
+            "read_sensitive",
+            "write_external"
+          ],
+          "session_id": "case-01-within-299"
+        },
+        {
+          "matched_event_ordinals": [
+            0,
+            1,
+            2
+          ],
+          "matched_tool_names": [
+            "retrieve_external",
+            "read_sensitive",
+            "write_external"
+          ],
+          "session_id": "case-02-boundary-300"
+        },
+        {
+          "matched_event_ordinals": [
+            0,
+            1,
+            2
+          ],
+          "matched_tool_names": [
+            "retrieve_external",
+            "read_sensitive",
+            "write_external"
+          ],
+          "session_id": "case-03-outside-301"
+        },
+        {
+          "matched_event_ordinals": [
+            0,
+            1,
+            2
+          ],
+          "matched_tool_names": [
+            "retrieve_external",
+            "read_sensitive",
+            "write_external"
+          ],
+          "session_id": "case-04-missing-time"
+        },
+        {
+          "matched_event_ordinals": [
+            0,
+            2,
+            3
+          ],
+          "matched_tool_names": [
+            "retrieve_external_first",
+            "read_sensitive",
+            "write_external"
+          ],
+          "session_id": "case-06-multiple-candidates"
+        },
+        {
+          "matched_event_ordinals": [
+            0,
+            2,
+            3
+          ],
+          "matched_tool_names": [
+            "retrieve_external_expired",
+            "read_sensitive",
+            "write_external"
+          ],
+          "session_id": "case-07-later-valid-source"
+        },
+        {
+          "matched_event_ordinals": [
+            0,
+            1,
+            2
+          ],
+          "matched_tool_names": [
+            "retrieve_external",
+            "read_sensitive",
+            "write_external"
+          ],
+          "session_id": "case-08-tied-time"
+        },
+        {
+          "matched_event_ordinals": [
+            10,
+            20,
+            30
+          ],
+          "matched_tool_names": [
+            "retrieve_external",
+            "read_sensitive",
+            "write_external"
+          ],
+          "session_id": "case-11-gapped-seq"
+        }
+      ],
+      "fixtures": {
+        "true_negatives": 2,
+        "true_positives": 1
+      },
+      "purpose": "measured_rule",
+      "rule_id": "TW-001",
+      "rule_sha256": "9304bec9d515024fff0efa833923866060d806b0d40ef02e14b92e195d6cc4e9"
+    },
+    {
+      "detections": [
+        {
+          "matched_event_ordinals": [
+            0,
+            2,
+            4
+          ],
+          "matched_tool_names": [
+            "retrieve_external",
+            "read_sensitive",
+            "write_external"
+          ],
+          "session_id": "case-01-within-299"
+        },
+        {
+          "matched_event_ordinals": [
+            0,
+            1,
+            2
+          ],
+          "matched_tool_names": [
+            "retrieve_external",
+            "read_sensitive",
+            "write_external"
+          ],
+          "session_id": "case-02-boundary-300"
+        },
+        {
+          "matched_event_ordinals": [
+            0,
+            2,
+            3
+          ],
+          "matched_tool_names": [
+            "retrieve_external_first",
+            "read_sensitive",
+            "write_external"
+          ],
+          "session_id": "case-06-multiple-candidates"
+        },
+        {
+          "matched_event_ordinals": [
+            1,
+            2,
+            3
+          ],
+          "matched_tool_names": [
+            "retrieve_external_current",
+            "read_sensitive",
+            "write_external"
+          ],
+          "session_id": "case-07-later-valid-source"
+        },
+        {
+          "matched_event_ordinals": [
+            0,
+            1,
+            2
+          ],
+          "matched_tool_names": [
+            "retrieve_external",
+            "read_sensitive",
+            "write_external"
+          ],
+          "session_id": "case-08-tied-time"
+        },
+        {
+          "matched_event_ordinals": [
+            10,
+            20,
+            30
+          ],
+          "matched_tool_names": [
+            "retrieve_external",
+            "read_sensitive",
+            "write_external"
+          ],
+          "session_id": "case-11-gapped-seq"
+        }
+      ],
+      "fixtures": {
+        "true_negatives": 1,
+        "true_positives": 1
+      },
+      "purpose": "test_only_window_semantics",
+      "rule_id": "TW-CONFORMANCE-WINDOW",
+      "rule_sha256": "3a5cfb552b80e2c4e857ddd476b6b39686a6d42d3ec138f45c20501fe54109f8"
+    }
+  ],
+  "schema_version": 1,
+  "session_count": 12
+}

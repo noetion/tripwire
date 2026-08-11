@@ -6,6 +6,12 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from tripwire.adapters.agentdojo import load_taxonomy
+from tripwire.conformance import (
+    conformance_result_path,
+    evaluate_conformance,
+    verify_conformance,
+    write_conformance_result,
+)
 from tripwire.corpus import build_corpus, inventory
 from tripwire.evaluation import evaluate_corpus, run_rule_tests, verify_repository, write_result
 
@@ -37,6 +43,14 @@ def _parser() -> argparse.ArgumentParser:
         "--split", choices=["development", "holdout", "all"], default="all"
     )
     evaluate_parser.add_argument("--output", type=Path, required=True)
+
+    conformance = subcommands.add_parser("conformance")
+    conformance_subcommands = conformance.add_subparsers(dest="conformance_command", required=True)
+    conformance_evaluate = conformance_subcommands.add_parser("evaluate")
+    conformance_evaluate.add_argument("--suite", type=Path, required=True)
+    conformance_evaluate.add_argument("--output", type=Path)
+    conformance_verify = conformance_subcommands.add_parser("verify")
+    conformance_verify.add_argument("--suite", type=Path, required=True)
 
     subcommands.add_parser("verify")
     report = subcommands.add_parser("report")
@@ -100,6 +114,17 @@ def main(argv: Sequence[str] | None = None) -> int:
         write_result(evaluation_result, args.output)
         print(f"Wrote reproducible result to {args.output}")
         return 0
+    if args.command == "conformance":
+        root = Path.cwd()
+        if args.conformance_command == "evaluate":
+            result = evaluate_conformance(root, args.suite)
+            output = args.output or conformance_result_path(root, args.suite)
+            write_conformance_result(result, output)
+            print(f"Wrote reproducible conformance result to {output}")
+            return 0
+        if args.conformance_command == "verify":
+            print(verify_conformance(root, args.suite))
+            return 0
     if args.command == "verify":
         print(verify_repository(Path.cwd()))
         return 0
