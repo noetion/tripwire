@@ -101,6 +101,7 @@ def write_result(result: dict[str, Any], output: Path) -> None:
 
 
 def verify_repository(root: Path) -> str:
+    from tripwire.conformance import verify_conformance
     from tripwire.core.rules import load_rule
     from tripwire.reporting import render_readme
 
@@ -121,12 +122,14 @@ def verify_repository(root: Path) -> str:
         raise VerificationError("README result summary was not generated from the canonical result")
     holdout = cast(dict[str, Any], generated["holdout"])
     counts = cast(dict[str, Any], holdout["counts"])
-    return (
+    measured_summary = (
         f"TW-001 verified: holdout TP={counts['true_positives']} FP={counts['false_positives']} "
         f"TN={counts['true_negatives']} FN={counts['false_negatives']}; "
         f"fixtures={positives} TP/{negatives} TN; "
         f"matched={len(cast(list[Any], holdout['matches']))}"
     )
+    conformance_summary = verify_conformance(root, root / "conformance" / "sequence-v1")
+    return f"{measured_summary}; {conformance_summary}"
 
 
 def _evaluate_split(rule: Rule, runs: list[NormalisedRun]) -> dict[str, Any]:

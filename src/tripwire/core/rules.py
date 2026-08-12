@@ -51,6 +51,23 @@ def load_rule(path: Path) -> Rule:
         raise RuleError(f"{path}: cannot load rule: {exc}") from exc
     if not isinstance(raw, dict):
         raise RuleError(f"{path}: rule root must be an object")
+    _reject_unknown_keys(
+        raw,
+        {
+            "schema_version",
+            "id",
+            "title",
+            "status",
+            "severity",
+            "scope",
+            "sequence",
+            "match",
+            "tests",
+            "references",
+        },
+        path,
+        "rule",
+    )
     sequence_raw = raw.get("sequence")
     if not isinstance(sequence_raw, list) or len(sequence_raw) < 2:
         raise RuleError(f"{path}: sequence must contain at least two steps")
@@ -60,6 +77,7 @@ def load_rule(path: Path) -> Rule:
         raise RuleError(f"{path}: sequence aliases must be unique")
 
     match = _object(raw, "match", path)
+    _reject_unknown_keys(match, {"group_by", "order", "within"}, path, "match")
     group_by_raw = match.get("group_by")
     order_raw = match.get("order")
     if group_by_raw != ["session_id"]:
@@ -73,11 +91,19 @@ def load_rule(path: Path) -> Rule:
         raise RuleError(f"{path}: within must be null or a positive integer number of seconds")
 
     tests_raw = _object(raw, "tests", path)
+    _reject_unknown_keys(tests_raw, {"true_positives", "true_negatives"}, path, "tests")
     tp = _string_list(tests_raw, "true_positives", path)
     tn = _string_list(tests_raw, "true_negatives", path)
     if not tp or not tn:
         raise RuleError(f"{path}: rule must own positive and negative fixtures")
     scope = _object(raw, "scope", path)
+    _reject_unknown_keys(scope, {"corpus"}, path, "scope")
+    references = raw.get("references")
+    if references is not None and (
+        not isinstance(references, list)
+        or not all(isinstance(reference, str) and reference for reference in references)
+    ):
+        raise RuleError(f"{path}: references must be an array of non-empty strings")
     schema_version = _integer(raw, "schema_version", path)
     if schema_version != 1:
         raise RuleError(f"{path}: unsupported schema_version {schema_version}")
@@ -99,6 +125,9 @@ def load_rule(path: Path) -> Rule:
 def _parse_step(path: Path, index: int, value: Any) -> SequenceStep:
     if not isinstance(value, dict):
         raise RuleError(f"{path}: sequence step {index} must be an object")
+    _reject_unknown_keys(
+        value, {"as", "kind", "tool_role", "source_trust"}, path, f"sequence step {index}"
+    )
     valid_kinds = {"user_input", "agent_output", "tool_call", "tool_result"}
     valid_roles = {
         "external_input",
@@ -112,11 +141,11 @@ def _parse_step(path: Path, index: int, value: Any) -> SequenceStep:
     kind = value.get("kind")
     role = value.get("tool_role")
     trust = value.get("source_trust")
-    if kind not in valid_kinds:
+    if not isinstance(kind, str) or kind not in valid_kinds:
         raise RuleError(f"{path}: sequence step {index} has invalid kind")
-    if role is not None and role not in valid_roles:
+    if role is not None and (not isinstance(role, str) or role not in valid_roles):
         raise RuleError(f"{path}: sequence step {index} has invalid tool_role")
-    if trust is not None and trust not in valid_trust:
+    if trust is not None and (not isinstance(trust, str) or trust not in valid_trust):
         raise RuleError(f"{path}: sequence step {index} has invalid source_trust")
     return SequenceStep(
         alias=_string(value, "as", path),
@@ -152,3 +181,10 @@ def _string_list(raw: dict[str, Any], key: str, path: Path) -> tuple[str, ...]:
     if not isinstance(value, list) or not all(isinstance(item, str) and item for item in value):
         raise RuleError(f"{path}: {key} must be an array of strings")
     return tuple(value)
+
+
+def _reject_unknown_keys(raw: dict[str, Any], allowed: set[str], path: Path, label: str) -> None:
+    unknown = sorted(set(raw) - allowed, key=str)
+    if unknown:
+        names = ", ".join(str(field) for field in unknown)
+        raise RuleError(f"{path}: {label} contains unknown fields: {names}")

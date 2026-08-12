@@ -17,3 +17,9 @@ The canonical split groups by `(suite, user task, injection task)`, so it isolat
 ## 2026-08-03: Naive-sequence stop-condition check
 
 The naive external-result then external-write diagnostic matched 4 of 74 development negatives and 1 of 37 holdout negatives. `TW-001` matched 3 of 74 and 1 of 37 respectively. The documented stop condition was not reached because `TW-001` has better specificity on the frozen development data, although the improvement did not repeat on holdout. This limitation is reported without changing the rule after holdout evaluation.
+
+## 2026-08-11: Freeze the provider-neutral conformance boundary before M3
+
+The local engine is the reference for future provider implementations. The committed `sequence-v1` suite separately fixes ordering and elapsed-time semantics using synthetic normalised events, while the measured `TW-001` rule and its spent holdout remain unchanged. A test-only bounded rule lives outside the published rule directory and makes no detection-effectiveness claim.
+
+No generic backend interface is introduced before a real provider consumer exists. A provider earns `conformant` status per rule only after its executed result exactly matches the committed session identifiers, rule hashes, event ordinals and tool names. Provider rendering, ingestion, execution, alerting, latency and cost evidence begin after this boundary.

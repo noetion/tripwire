@@ -1,0 +1,17 @@
+{
+  "events_file": "conformance/sequence-v1/events.jsonl",
+  "events_sha256": "fabc944cfff284beb1da58f79eb6f861a2ec3e7b8fca75929e832aed34eb97b4",
+  "result_file": "results/conformance-sequence-v1.json",
+  "rules": [
+    {
+      "path": "rules/TW-001.yaml",
+      "purpose": "measured_rule"
+    },
+    {
+      "path": "conformance/sequence-v1/rules/TW-CONFORMANCE-WINDOW.yaml",
+      "purpose": "test_only_window_semantics"
+    }
+  ],
+  "schema_version": 1,
+  "suite_id": "sequence-v1"
+}
