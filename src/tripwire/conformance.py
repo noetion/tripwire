@@ -65,7 +65,12 @@ def evaluate_conformance(root: Path, suite: Path) -> dict[str, Any]:
         manifest_path,
         "manifest",
     )
-    if manifest["schema_version"] != 1:
+    schema_version = manifest["schema_version"]
+    if (
+        not isinstance(schema_version, int)
+        or isinstance(schema_version, bool)
+        or schema_version != 1
+    ):
         raise ConformanceError(f"{manifest_path}: unsupported schema_version")
     suite_id = _non_empty_string(manifest, "suite_id", manifest_path)
     expected_events_sha256 = _sha256(manifest, "events_sha256", manifest_path)
@@ -232,6 +237,8 @@ def _parse_event(raw: Any, path: Path, line_number: int) -> AgentEvent:
         raise ConformanceError(f"{path}:{line_number}: session_id must be non-empty")
     if not isinstance(raw["seq"], int) or isinstance(raw["seq"], bool) or raw["seq"] < 0:
         raise ConformanceError(f"{path}:{line_number}: seq must be a non-negative integer")
+    if raw["observed_at"] is not None and not isinstance(raw["observed_at"], str):
+        raise ConformanceError(f"{path}:{line_number}: observed_at must be a string or null")
     for key in ("tool_name", "tool_call_id"):
         if raw[key] is not None and not isinstance(raw[key], str):
             raise ConformanceError(f"{path}:{line_number}: {key} must be a string or null")

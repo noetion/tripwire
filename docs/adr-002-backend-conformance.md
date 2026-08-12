@@ -33,8 +33,8 @@ semantics:
 - candidate search may skip an expired earlier event to find a later valid sequence;
 - events from different sessions cannot complete one sequence.
 
-Rules and suite inputs reject unknown fields. This prevents a misspelled field from silently
-broadening a rendered query.
+Rules and suite inputs reject unknown or malformed fields. This prevents a misspelled or wrongly
+typed field from silently broadening a rendered query or changing timestamp-window semantics.
 
 No provider interface or placeholder backend is added now. The first real provider consumer will
 define its mapping and rendering contract. Backend status remains per rule: `unsupported`,

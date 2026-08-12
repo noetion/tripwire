@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+import json
 import shutil
 from pathlib import Path
 from typing import Any, cast
@@ -70,6 +72,38 @@ def test_conformance_event_corpus_hash_is_enforced(tmp_path: Path) -> None:
 
     with pytest.raises(ConformanceError, match="event corpus hash mismatch"):
         evaluate_conformance(tmp_path, copied / "sequence-v1")
+
+
+def test_non_string_timestamp_fails_closed(tmp_path: Path) -> None:
+    copied = tmp_path / "conformance"
+    shutil.copytree(ROOT / "conformance", copied)
+    suite = copied / "sequence-v1"
+    events_path = suite / "events.jsonl"
+    lines = events_path.read_text(encoding="utf-8").splitlines()
+    first_event = json.loads(lines[0])
+    first_event["observed_at"] = 0
+    lines[0] = json.dumps(first_event, separators=(",", ":"))
+    events = ("\n".join(lines) + "\n").encode()
+    events_path.write_bytes(events)
+
+    manifest_path = suite / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["events_sha256"] = hashlib.sha256(events).hexdigest()
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    with pytest.raises(ConformanceError, match="observed_at must be a string or null"):
+        evaluate_conformance(tmp_path, suite)
+
+
+def test_boolean_manifest_schema_version_fails_closed(tmp_path: Path) -> None:
+    suite = tmp_path / "conformance" / "sequence-v1"
+    suite.mkdir(parents=True)
+    manifest = json.loads((SUITE / "manifest.json").read_text(encoding="utf-8"))
+    manifest["schema_version"] = True
+    (suite / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+
+    with pytest.raises(ConformanceError, match="unsupported schema_version"):
+        evaluate_conformance(tmp_path, suite)
 
 
 def test_unknown_rule_fields_fail_closed(tmp_path: Path) -> None:
