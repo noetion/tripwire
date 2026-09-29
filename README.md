@@ -1,8 +1,16 @@
 # Tripwire
 
-Tripwire evaluates deterministic sequence rules over AI-agent tool-call traces. Its first measured rule, `TW-001`, looks for an external tool result followed by a sensitive read and then an external write in one session.
+**Reproducible evaluation of a sequence rule for AI-agent prompt injection.**
 
-The main finding is a provenance failure, not a new attack signature. Eight of the eleven canonical holdout false negatives received attacker-controlled strings inside transaction records returned by banking tools classified as internal. Tool-result-level provenance is too coarse when a trusted tool returns mixed-trust records; item-level provenance is required to distinguish the injected content without distrusting the entire result.
+Tripwire tests whether the order of an agent's tool calls can identify successful prompt-injection outcomes in recorded AgentDojo banking sessions. It combines a sanitised replay corpus, a deterministic rule engine, and a reproducible evaluation with confidence intervals and an error audit.
+
+Its first measured rule, `TW-001`, looks for this sequence within one session:
+
+```text
+external tool result → sensitive read → external write
+```
+
+The canonical holdout finds 6 of 17 successful attack sessions, with 1 false positive among 37 negative sessions. The misses expose a practical limit: a banking tool classified as internal can still return attacker-controlled content. The [results](#canonical-combination-holdout) and [error analysis](#why-the-rule-missed-attacks) explain that boundary.
 
 Tripwire is a research prototype and reproducibility artifact. It is not affiliated with Fortra's Tripwire products. GitHub issues may be used to report reproducibility defects; no support or release cadence is promised.
 
@@ -11,6 +19,8 @@ Tripwire is a research prototype and reproducibility artifact. It is not affilia
 Prerequisites: Python 3.11–3.13 and [uv](https://docs.astral.sh/uv/getting-started/installation/).
 
 ```console
+git clone https://github.com/noetion/tripwire.git
+cd tripwire
 uv sync --frozen
 uv run tripwire verify
 ```
@@ -30,6 +40,10 @@ Confusion counts: TP 6, FP 1, TN 36, FN 11. The holdout contains 17 positive and
 The canonical split hashes `(suite, user task, injection task)` tuples. It measures generalisation to unseen combinations, not unseen user tasks or attack families: some user-task identities and every injection-task identity appear on both sides.
 
 `TW-001` is now frozen. Its canonical holdout is spent because every error has been inspected. Any successor must be evaluated on a fresh split or corpus; a result produced by revising the rule against this holdout must be labelled contaminated rather than reported as new holdout performance.
+
+## Why the rule missed attacks
+
+Eight of the eleven canonical holdout false negatives received attacker-controlled strings inside transaction records returned by banking tools classified as internal. Tool-result-level provenance is too coarse when a trusted tool returns mixed-trust records; item-level provenance is required to distinguish the injected content without distrusting the entire result. This is a finding from the [holdout error audit](docs/evidence-audit.md), not a tested successor detector.
 
 ## Injection-family stress test
 
